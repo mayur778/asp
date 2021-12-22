@@ -1,0 +1,103 @@
+Scaffold-Dbcontext " ; Trusted-Connection=True" Microsoft.EntityFramework.SqlServer -OutputDir Models
+
+startup.cs
+services.AddDbContext<examContext>(o => o.UseSqlServer(Configuration.GetConnectionString("conDB")));
+
+tuple
+List<Dept> DeptList = new List<Dept>();
+            DeptList = await _context.Dept.Include(o => o.Emp).ToListAsync();
+
+            List<Emp> EmpList = new List<Emp>();
+            EmpList = await _context.Emp.ToListAsync();
+
+            Tuple<List<Dept>, List<Emp>> tuplelist = new Tuple<List<Dept>, List<Emp>>(DeptList, EmpList);
+
+
+
+            return View(tuplelist);
+
+index.cshtml
+@model Tuple<List<exam.Models.Dept>, List<exam.Models.Emp>>
+
+
+SEARCH
+
+index.cshtml
+<div class="col">
+    <form asp-action="index" method="get" class="form-group form-inline">
+        <select class="form-control" name="searchtype" value=@ViewData["searchtype"]>
+            <option value="selected" selected>--- Select Search Type ---</option>
+            <option name="emp_name"> emp_name </option>
+            <option name="emp_email"> emp_email </option>
+            <option name="dept_id">dept_id</option>
+            
+        </select>
+        <input type="text" class="form-control" name="parameter" value=@ViewData["parameter"] />
+        <input type="submit" class="form-control" value="search">
+    </form>
+</div>
+
+
+CONTROLLER
+public async Task<IActionResult> Index(string searchtype,string parameter)
+        {
+
+            switch (searchtype)
+            {
+                case "emp_name":
+                    var data = (from u in _context.Emp
+                                where u.EmpName.Contains(parameter)
+                                select u).Include(s => s.Dept).ToList();
+                    return View(data);
+                    break;
+
+                case "emp_email":
+                    var data1 = (from u in _context.Emp
+                                 where u.EmpEmail.Contains(parameter)
+                                 select u).Include(s => s.Dept).ToList();
+                    return View(data1);
+
+                case "dept_id":
+                    var data2 = (from u in _context.Emp
+                                 join p in _context.Dept on u.DeptId equals p.DeptId
+                                 where p.DeptName.Contains(parameter)
+                                 select u).Include(s => s.Dept).ToList();
+
+                    return View(data2);
+                    break;
+
+           
+
+                default:
+                    var csdbContext = _context.Emp.Include(s => s.Dept);
+                    return View(await csdbContext.ToListAsync());
+                    break;
+
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
